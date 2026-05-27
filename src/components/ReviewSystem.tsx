@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Snippet } from './SnippetCard';
-import { Eye, CheckCircle, RefreshCw, Award, AlertTriangle } from 'lucide-react';
+import { Eye, CheckCircle, RefreshCw, Award } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -33,7 +33,7 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
   // State Handler Case A: Empty Deck or Completed Queue State
   if (isFinished || queue.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 max-w-xl w-full text-center flex flex-col items-center justify-center min-h-[320px]">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 max-w-xl w-full text-center flex flex-col items-center justify-center min-h-80">
         <div className="bg-emerald-500/10 p-4 rounded-full text-emerald-400 mb-4 animate-bounce">
           <Award size={40} />
         </div>
