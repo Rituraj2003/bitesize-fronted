@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { LayoutDashboard, FileText, Flame, PlusCircle } from 'lucide-react';
 
 // 1. REVISION: TypeScript Interface for Props

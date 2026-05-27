@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import SnippetCard, { type Snippet } from './components/SnippetCard';
 import SnippetForm from './components/SnippetForm';
@@ -20,7 +20,7 @@ export default function App() {
       lastReviewedDate: "2026-05-20T12:00:00.000Z"
     }
   ]);
-  const API_BASE = "https://bitesize-backend.onrender.com";
+  const API_BASE = "https://bitesize-backend.onrender.com/api";
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
 

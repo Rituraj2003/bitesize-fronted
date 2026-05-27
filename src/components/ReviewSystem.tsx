@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Snippet } from './SnippetCard';
 import { Eye, CheckCircle, RefreshCw, Award, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
