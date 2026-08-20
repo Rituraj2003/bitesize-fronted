@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentPropsWithoutRef } from 'react';
 import { Plus, X, Eye, Edit2, Save, FileText, Code } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -8,19 +8,19 @@ interface SnippetFormProps {
   onSave: (newSnippet: { title: string; bodyText: string; languageTags: string[] }) => void;
 }
 
+type CodeProps = ComponentPropsWithoutRef<'code'> & {
+  inline?: boolean;
+};
+
 export default function SnippetForm({ onSave }: SnippetFormProps) {
   const [title, setTitle] = useState<string>('');
   const [tagInput, setTagInput] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
-  
-  // 1. REVISION: Split inputs instead of one massive markdown box
   const [summaryNote, setSummaryNote] = useState<string>('');
   const [rawCodeBlock, setRawCodeBlock] = useState<string>('');
   const [primaryLanguage, setPrimaryLanguage] = useState<string>('javascript');
-
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
 
-  // 2. REVISION: Combining split states into a standardized Markdown string
   const buildCombinedMarkdown = (): string => {
     let combined = '';
     if (summaryNote.trim()) {
@@ -38,7 +38,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
     if (cleanTag && !tags.includes(cleanTag)) {
       setTags([...tags, cleanTag]);
       setTagInput('');
-      // Smart default: if the user types 'cpp' or 'java' as a tag, auto-set the code language drop-down
       if (['cpp', 'javascript', 'typescript', 'python', 'sql', 'java', 'html', 'css'].includes(cleanTag)) {
         setPrimaryLanguage(cleanTag);
       }
@@ -60,7 +59,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
       return;
     }
 
-    // Compile everything into the structured markdown block expected by our view engine
     const finalBodyText = buildCombinedMarkdown();
 
     onSave({ 
@@ -69,7 +67,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
       languageTags: tags.length > 0 ? tags : [primaryLanguage] 
     });
     
-    // Reset Form
     setTitle('');
     setSummaryNote('');
     setRawCodeBlock('');
@@ -109,7 +106,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
 
       {activeTab === 'edit' ? (
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Metadata: Title */}
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Snippet Title</label>
             <input
@@ -121,7 +117,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
             />
           </div>
 
-          {/* Metadata: Tags and Language Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Categorization Tags</label>
@@ -161,7 +156,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
             </div>
           </div>
 
-          {/* Display active tags if available */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {tags.map(tag => (
@@ -175,7 +169,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
             </div>
           )}
 
-          {/* Split Input 1: The Plain Text Note Summary */}
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <FileText size={14} className="text-blue-400" /> 1. Concept Rule or Summary Note (Plain Text)
@@ -184,12 +177,11 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
               value={summaryNote}
               onChange={(e) => setSummaryNote(e.target.value)}
               rows={3}
-              placeholder="Type out what your brain needs to remember. No markdown markdown headers required..."
+              placeholder="Type out what your brain needs to remember. No markdown headers required..."
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
             />
           </div>
 
-          {/* Split Input 2: The Raw Code Block */}
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <Code size={14} className="text-emerald-400" /> 2. Code Block (Just paste code, no backticks needed!)
@@ -211,7 +203,6 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
           </button>
         </form>
       ) : (
-        /* Preview Tab Engine */
         <div className="bg-slate-950 border border-slate-800 rounded-lg p-4 min-h-[320px]">
           {title || summaryNote || rawCodeBlock ? (
             <div>
@@ -224,16 +215,15 @@ export default function SnippetForm({ onSave }: SnippetFormProps) {
               <div className="text-sm text-slate-300 border-t border-slate-800/80 pt-3">
                 <ReactMarkdown
                   components={{
-                    code({ node, inline, className, children, ...props }: any) {
+                    code({ inline, className, children, ...props }: CodeProps) {
                       const match = /language-(\w+)/.exec(className || '');
                       return !inline && match ? (
                         <div className="rounded-lg overflow-hidden my-3 border border-slate-800">
                           <SyntaxHighlighter
-                            style={vscDarkPlus as any}
+                            style={vscDarkPlus as unknown as { [key: string]: React.CSSProperties }}
                             language={match[1]}
                             PreTag="div"
                             customStyle={{ margin: 0, background: '#0f172a', padding: '1rem' }}
-                            {...props}
                           >
                             {String(children).replace(/\n$/, '')}
                           </SyntaxHighlighter>

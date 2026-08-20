@@ -13,46 +13,43 @@ export default function App() {
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const API_BASE = "https://bitesize-backend.onrender.com/api";
-
-  // 1. Fetch snippets from production backend using full-text search
-  const fetchSnippets = async () => {
-    setLoading(true);
-    try {
-      const url = `${API_BASE}/snippets?search=${encodeURIComponent(searchQuery)}&tag=${encodeURIComponent(selectedTag)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setSnippets(data);
-      }
-    } catch (err) {
-      console.error("Error synchronizing with production API layer:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 2. Fetch specific daily spaced-repetition cards
-  const fetchReviewQueue = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/review/daily`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setReviewQueue(data);
-      }
-    } catch (err) {
-      console.error("Error loading active daily memory retention elements:", err);
-    }
-  };
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://bitesize-backend.onrender.com/api";
 
   // Sync network state when tabs or search inputs change
   useEffect(() => {
+    let isMounted = true;
+
     if (view === 'all-snippets') {
-      fetchSnippets();
+      const url = `${API_BASE}/snippets?search=${encodeURIComponent(searchQuery)}&tag=${encodeURIComponent(selectedTag)}`;
+      
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (isMounted && Array.isArray(data)) {
+            setSnippets(data);
+          }
+        })
+        .catch(err => console.error("Error synchronizing with production API layer:", err))
+        .finally(() => {
+          if (isMounted) {
+            setLoading(false);
+          }
+        });
     } else if (view === 'review-queue') {
-      fetchReviewQueue();
+      fetch(`${API_BASE}/review/daily`)
+        .then(res => res.json())
+        .then(data => {
+          if (isMounted && Array.isArray(data)) {
+            setReviewQueue(data);
+          }
+        })
+        .catch(err => console.error("Error loading active daily memory retention elements:", err));
     }
-  }, [view, searchQuery, selectedTag]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [API_BASE, view, searchQuery, selectedTag]);
 
   // 3. Save a fresh new snippet into Neon Postgres
   const handleCreateSnippet = async (newSnippetData: { title: string; bodyText: string; languageTags: string[] }) => {

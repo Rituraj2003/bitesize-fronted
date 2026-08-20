@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentPropsWithoutRef } from 'react';
 import type { Snippet } from './SnippetCard';
 import { Eye, CheckCircle, RefreshCw, Award } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -10,27 +10,25 @@ interface ReviewSystemProps {
   onCompleteReview: (id: string, performanceRating: 'easy' | 'hard') => void;
 }
 
+type CodeProps = ComponentPropsWithoutRef<'code'> & {
+  inline?: boolean;
+};
+
 export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemProps) {
-  // 1. REVISION: Tracking dynamic indices in active list arrays
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [revealed, setRevealed] = useState<boolean>(false);
 
-  // Safety Boundary Check: Check if there is data or if we have finished the deck
   const isFinished = currentIndex >= queue.length;
   const currentSnippet = !isFinished ? queue[currentIndex] : null;
 
   const handleActionClick = (rating: 'easy' | 'hard') => {
     if (currentSnippet) {
-      // Trigger the parent tracking function to calculate updated metrics
       onCompleteReview(currentSnippet.id, rating);
-      
-      // Step the review pointer forward to the next index slot
       setRevealed(false);
       setCurrentIndex(currentIndex + 1);
     }
   };
 
-  // State Handler Case A: Empty Deck or Completed Queue State
   if (isFinished || queue.length === 0) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 max-w-xl w-full text-center flex flex-col items-center justify-center min-h-80">
@@ -45,11 +43,8 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
     );
   }
 
-  // State Handler Case B: Active Card Presentation Pane
   return (
     <div className="w-full max-w-2xl flex flex-col gap-4">
-      
-      {/* Dynamic Queue Tracking Progress Header */}
       <div className="flex items-center justify-between text-xs text-slate-400 font-mono bg-slate-900/40 border border-slate-800/80 px-4 py-2 rounded-lg">
         <span>Active Retention Deck</span>
         <span className="bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-bold">
@@ -57,10 +52,7 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
         </span>
       </div>
 
-      {/* Main Flashcard Work Area */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl transition-all">
-        
-        {/* Title & Tag Block */}
         <div className="border-b border-slate-800 pb-4 mb-4">
           <span className="text-[10px] font-mono uppercase font-bold tracking-widest text-blue-500">Core Topic Prompt</span>
           <h2 className="text-xl font-bold text-slate-100 mt-0.5 tracking-tight">{currentSnippet?.title}</h2>
@@ -73,7 +65,6 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
           </div>
         </div>
 
-        {/* Hiding/Revealing Block Container Core Logic */}
         {!revealed ? (
           <div className="flex flex-col items-center justify-center py-12 bg-slate-950/60 border border-dashed border-slate-800 rounded-xl">
             <p className="text-slate-500 text-sm italic mb-4">Attempt to actively recall this code syntax or core concept rule block...</p>
@@ -88,16 +79,15 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
           <div className="text-sm text-slate-300 bg-slate-950 border border-slate-800/80 rounded-xl p-4 animate-fadeIn">
             <ReactMarkdown
               components={{
-                code({ node, inline, className, children, ...props }: any) {
+                code({ inline, className, children, ...props }: CodeProps) {
                   const match = /language-(\w+)/.exec(className || '');
                   return !inline && match ? (
                     <div className="rounded-lg overflow-hidden my-3 border border-slate-800">
                       <SyntaxHighlighter
-                        style={vscDarkPlus as any}
+                        style={vscDarkPlus as unknown as { [key: string]: React.CSSProperties }}
                         language={match[1]}
                         PreTag="div"
                         customStyle={{ margin: 0, background: '#0f172a', padding: '1rem' }}
-                        {...props}
                       >
                         {String(children).replace(/\n$/, '')}
                       </SyntaxHighlighter>
@@ -115,7 +105,6 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
           </div>
         )}
 
-        {/* Dynamic Controls Action Row (Only surfaces once content is revealed) */}
         {revealed && (
           <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row gap-3 items-center justify-between">
             <p className="text-xs text-slate-500 italic">How effectively did your brain map this memory string structure?</p>
@@ -136,7 +125,6 @@ export default function ReviewSystem({ queue, onCompleteReview }: ReviewSystemPr
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
