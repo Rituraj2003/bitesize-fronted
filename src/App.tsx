@@ -3,6 +3,7 @@ import Sidebar from "./components/Sidebar";
 import SnippetCard, { type Snippet } from "./components/SnippetCard";
 import SnippetForm from "./components/SnippetForm";
 import ReviewSystem from "./components/ReviewSystem";
+import AuthModal from "./components/AuthModal";
 import { Search, Tag } from "lucide-react";
 
 export default function App() {
@@ -13,19 +14,48 @@ export default function App() {
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Authentication State
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("bitesize_token"));
+  const [user, setUser] = useState<any>(() => {
+    const saved = localStorage.getItem("bitesize_user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const API_BASE =
     import.meta.env.VITE_API_BASE_URL ||
-    "https://bitesize-backend.onrender.com/api";
+    (import.meta.env.DEV ? "http://localhost:5050/api" : "https://bitesize-backend.onrender.com/api");
+
+  const handleLogout = () => {
+    localStorage.removeItem("bitesize_token");
+    localStorage.removeItem("bitesize_user");
+    setToken(null);
+    setUser(null);
+    setSnippets([]);
+    setReviewQueue([]);
+  };
+
+  const getHeaders = () => ({
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  });
 
   // Sync network state when tabs or search inputs change
   useEffect(() => {
+    if (!token) return;
     let isMounted = true;
 
     if (view === "all-snippets") {
+      setLoading(true);
       const url = `${API_BASE}/snippets?search=${encodeURIComponent(searchQuery)}&tag=${encodeURIComponent(selectedTag)}`;
 
-      fetch(url)
-        .then((res) => res.json())
+      fetch(url, { headers: getHeaders() })
+        .then((res) => {
+          if (res.status === 401 || res.status === 403) {
+            handleLogout();
+            throw new Error("Session expired");
+          }
+          return res.json();
+        })
         .then((data) => {
           if (isMounted && Array.isArray(data)) {
             setSnippets(data);
@@ -40,8 +70,14 @@ export default function App() {
           }
         });
     } else if (view === "review-queue") {
-      fetch(`${API_BASE}/review/daily`)
-        .then((res) => res.json())
+      fetch(`${API_BASE}/review/daily`, { headers: getHeaders() })
+        .then((res) => {
+          if (res.status === 401 || res.status === 403) {
+            handleLogout();
+            throw new Error("Session expired");
+          }
+          return res.json();
+        })
         .then((data) => {
           if (isMounted && Array.isArray(data)) {
             setReviewQueue(data);
@@ -58,7 +94,7 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, [API_BASE, view, searchQuery, selectedTag]);
+  }, [API_BASE, view, searchQuery, selectedTag, token]);
 
   // 3. Save a fresh new snippet into Neon Postgres
   const handleCreateSnippet = async (newSnippetData: {
@@ -69,9 +105,14 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/snippets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(newSnippetData),
       });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
 
       if (res.ok) {
         setSearchQuery("");
@@ -91,9 +132,14 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/review/${id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify({ performanceRating }),
       });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
 
       if (res.ok) {
         setReviewQueue((prev) => prev.filter((item) => item.id !== id));
@@ -110,7 +156,18 @@ export default function App() {
 
   return (
     <div className="flex bg-slate-950 text-slate-100 min-h-screen">
-      <Sidebar currentView={view} setView={setView} />
+      {!token && (
+        <AuthModal
+          apiBase={API_BASE}
+          onSuccess={(newToken, newUser) => {
+            setToken(newToken);
+            setUser(newUser);
+            setView("dashboard");
+          }}
+        />
+      )}
+
+      <Sidebar currentView={view} setView={setView} user={user} onLogout={handleLogout} />
 
       <main className="flex-1 p-8 overflow-y-auto h-screen">
         <div className="mb-6">

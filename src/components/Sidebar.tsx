@@ -1,21 +1,17 @@
-// import React from 'react';
-import { LayoutDashboard, FileText, Flame, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, FileText, Flame, PlusCircle, LogOut, User as UserIcon } from 'lucide-react';
 
-// 1. REVISION: TypeScript Interface for Props
-// This defines exactly what data this component expects from its parent.
 interface SidebarProps {
   currentView: string;
   setView: (view: string) => void;
+  user?: { email: string; name?: string } | null;
+  onLogout?: () => void;
 }
 
-export default function Sidebar({ currentView, setView }: SidebarProps) {
-  
-  // 2. REVISION: Array Mapping for UI Elements
-  // Instead of copying and pasting HTML for 4 buttons, we map through an array.
+export default function Sidebar({ currentView, setView, user, onLogout }: SidebarProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'all-snippets', label: 'All Notes', icon: FileText },
-    { id: 'review-queue', label: 'Daily Review', icon: Flame, badge: 5 },
+    { id: 'review-queue', label: 'Daily Review', icon: Flame },
     { id: 'create-new', label: 'New Snippet', icon: PlusCircle },
   ];
 
@@ -36,14 +32,12 @@ export default function Sidebar({ currentView, setView }: SidebarProps) {
         <nav className="space-y-1">
           {navItems.map((item) => {
             const IconComponent = item.icon;
-            // 3. REVISION: Dynamic Tailwind Class Names
-            // We check if this item is the currently active view to change its color.
             const isActive = currentView === item.id;
 
             return (
               <button
                 key={item.id}
-                onClick={() => setView(item.id)} // Triggers state change in parent
+                onClick={() => setView(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
                   isActive
                     ? 'bg-blue-600 text-white'
@@ -54,24 +48,34 @@ export default function Sidebar({ currentView, setView }: SidebarProps) {
                   <IconComponent size={18} />
                   <span>{item.label}</span>
                 </div>
-
-                {/* Optional Badge for Daily Review */}
-                {item.badge && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                    isActive ? 'bg-white text-blue-600' : 'bg-amber-500/20 text-amber-400'
-                  }`}>
-                    {item.badge}
-                  </span>
-                )}
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* Quick Footer */}
-      <div className="text-xs text-slate-500 px-2 border-t border-slate-800 pt-4">
-        v1.0.0 • Micro-Learning
+      {/* User Footer & Logout */}
+      <div className="border-t border-slate-800 pt-4 space-y-3">
+        {user && (
+          <div className="flex items-center gap-2 px-2 text-xs text-slate-400">
+            <UserIcon size={14} className="text-slate-500 shrink-0" />
+            <span className="truncate">{user.name || user.email}</span>
+          </div>
+        )}
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <LogOut size={14} />
+            <span>Sign Out</span>
+          </button>
+        )}
+
+        <div className="text-[10px] text-slate-600 px-2 pt-1">
+          v1.0.0 • Multi-Tenant Auth
+        </div>
       </div>
     </div>
   );
