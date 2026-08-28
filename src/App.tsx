@@ -45,7 +45,6 @@ export default function App() {
     };
 
     if (view === "all-snippets") {
-      setLoading(true);
       const url = `${API_BASE}/snippets?search=${encodeURIComponent(searchQuery)}&tag=${encodeURIComponent(selectedTag)}`;
 
       fetch(url, { headers: authHeaders })
