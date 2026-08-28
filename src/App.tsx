@@ -209,7 +209,7 @@ export default function App() {
                   />
                   <input
                     type="text"
-                    placeholder="Search cloud indexes using native PostgreSQL Full-Text Search..."
+                    placeholder="Search code snippets, topics, or notes..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
@@ -239,7 +239,7 @@ export default function App() {
               <div className="flex flex-col gap-4 w-full">
                 {loading ? (
                   <p className="text-slate-500 italic text-sm animate-pulse">
-                    Running advanced text index search across cloud indices...
+                    Searching your snippets...
                   </p>
                 ) : snippets.length > 0 ? (
                   snippets.map((item) => (
@@ -248,8 +248,7 @@ export default function App() {
                 ) : (
                   <div className="text-center py-12 bg-slate-900/40 border border-slate-800 border-dashed rounded-xl">
                     <p className="text-slate-500 text-sm italic">
-                      No snippets found matching your structural search matrix
-                      fields.
+                      No snippets found matching your search query.
                     </p>
                   </div>
                 )}

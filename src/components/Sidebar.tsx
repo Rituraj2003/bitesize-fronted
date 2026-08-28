@@ -75,7 +75,7 @@ export default function Sidebar({ currentView, setView, user, onLogout }: Sideba
         )}
 
         <div className="text-[10px] text-slate-600 px-2 pt-1">
-          v1.0.0 • Multi-Tenant Auth
+          v1.0.0 • Micro-Learning Platform
         </div>
       </div>
     </div>
