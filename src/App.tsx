@@ -34,21 +34,21 @@ export default function App() {
     setReviewQueue([]);
   };
 
-  const getHeaders = () => ({
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  });
-
   // Sync network state when tabs or search inputs change
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
 
+    const authHeaders = {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+
     if (view === "all-snippets") {
       setLoading(true);
       const url = `${API_BASE}/snippets?search=${encodeURIComponent(searchQuery)}&tag=${encodeURIComponent(selectedTag)}`;
 
-      fetch(url, { headers: getHeaders() })
+      fetch(url, { headers: authHeaders })
         .then((res) => {
           if (res.status === 401 || res.status === 403) {
             handleLogout();
@@ -70,7 +70,7 @@ export default function App() {
           }
         });
     } else if (view === "review-queue") {
-      fetch(`${API_BASE}/review/daily`, { headers: getHeaders() })
+      fetch(`${API_BASE}/review/daily`, { headers: authHeaders })
         .then((res) => {
           if (res.status === 401 || res.status === 403) {
             handleLogout();
@@ -103,9 +103,14 @@ export default function App() {
     languageTags: string[];
   }) => {
     try {
+      const authHeaders = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
       const res = await fetch(`${API_BASE}/snippets`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: authHeaders,
         body: JSON.stringify(newSnippetData),
       });
 
@@ -130,9 +135,14 @@ export default function App() {
     performanceRating: "easy" | "hard",
   ) => {
     try {
+      const authHeaders = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
       const res = await fetch(`${API_BASE}/review/${id}`, {
         method: "POST",
-        headers: getHeaders(),
+        headers: authHeaders,
         body: JSON.stringify({ performanceRating }),
       });
 

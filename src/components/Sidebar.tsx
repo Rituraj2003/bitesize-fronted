@@ -1,9 +1,10 @@
 import { LayoutDashboard, FileText, Flame, PlusCircle, LogOut, User as UserIcon } from 'lucide-react';
+import { type UserData } from './AuthModal';
 
 interface SidebarProps {
   currentView: string;
   setView: (view: string) => void;
-  user?: { email: string; name?: string } | null;
+  user?: UserData | null;
   onLogout?: () => void;
 }
 
