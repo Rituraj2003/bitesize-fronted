@@ -3,7 +3,7 @@ import Sidebar from "./components/Sidebar";
 import SnippetCard, { type Snippet } from "./components/SnippetCard";
 import SnippetForm from "./components/SnippetForm";
 import ReviewSystem from "./components/ReviewSystem";
-import AuthModal from "./components/AuthModal";
+import AuthModal, { type UserData } from "./components/AuthModal";
 import { Search, Tag } from "lucide-react";
 
 export default function App() {
@@ -16,7 +16,7 @@ export default function App() {
 
   // Authentication State
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("bitesize_token"));
-  const [user, setUser] = useState<any>(() => {
+  const [user, setUser] = useState<UserData | null>(() => {
     const saved = localStorage.getItem("bitesize_user");
     return saved ? JSON.parse(saved) : null;
   });

@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Lock, Mail, User, Sparkles } from 'lucide-react';
+import { Lock, Mail, User as UserIcon, Sparkles } from 'lucide-react';
+
+export interface UserData {
+  id: string;
+  email: string;
+  name?: string | null;
+  createdAt?: string;
+}
 
 interface AuthModalProps {
   apiBase: string;
-  onSuccess: (token: string, user: any) => void;
+  onSuccess: (token: string, user: UserData) => void;
 }
 
 export default function AuthModal({ apiBase, onSuccess }: AuthModalProps) {
@@ -30,23 +37,28 @@ export default function AuthModal({ apiBase, onSuccess }: AuthModalProps) {
       });
 
       const contentType = res.headers.get('content-type');
-      let data: any = {};
+      let data: Record<string, unknown> = {};
 
       if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
+        data = (await res.json()) as Record<string, unknown>;
       } else {
-        throw new Error('Backend API server returned non-JSON response. Make sure backend is running on port 5000 (`npm run dev` in bitesize-backend).');
+        throw new Error('Backend API server returned non-JSON response. Make sure backend is running on port 5050.');
       }
 
       if (!res.ok) {
-        throw new Error(data.message || 'Authentication failed');
+        const errorMessage = typeof data.message === 'string' ? data.message : 'Authentication failed';
+        throw new Error(errorMessage);
       }
 
-      localStorage.setItem('bitesize_token', data.token);
-      localStorage.setItem('bitesize_user', JSON.stringify(data.user));
-      onSuccess(data.token, data.user);
-    } catch (err: any) {
-      setError(err.message || 'An unexpected authentication error occurred');
+      const token = typeof data.token === 'string' ? data.token : '';
+      const user = (data.user || {}) as UserData;
+
+      localStorage.setItem('bitesize_token', token);
+      localStorage.setItem('bitesize_user', JSON.stringify(user));
+      onSuccess(token, user);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An unexpected authentication error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -80,7 +92,7 @@ export default function AuthModal({ apiBase, onSuccess }: AuthModalProps) {
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-300">Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 text-slate-500" size={16} />
+                <UserIcon className="absolute left-3 top-2.5 text-slate-500" size={16} />
                 <input
                   type="text"
                   placeholder="Your Full Name"
