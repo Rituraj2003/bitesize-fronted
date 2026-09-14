@@ -257,7 +257,7 @@ export default function App() {
           )}
 
           {view === "create-new" && (
-            <SnippetForm onSave={handleCreateSnippet} />
+            <SnippetForm onSave={handleCreateSnippet} apiBase={API_BASE} token={token} />
           )}
 
           {view === "review-queue" && (
